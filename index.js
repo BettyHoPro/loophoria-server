@@ -1,8 +1,8 @@
 const app = require("express") ();
 const http = require("http").createServer( app );
 const io = require('socket.io') (http, {
-  cors: { origin: 'https://loophoria.herokuapp.com'} // this will become the heroku server link url
-//  cors: { origin: "http://localhost:3000" }
+//  cors: { origin: 'https://loophoria.herokuapp.com'} // this will become the heroku server link url
+  cors: { origin: "http://localhost:3000" }
 });
 
 
@@ -19,7 +19,7 @@ io.on('connection', socket => {
 
 
 
-http.listen(4000, function () {
+http.listen(process.env.PORT || 4000, function () {
   console.log("listening on port 4000");
 });
 
