@@ -20,7 +20,7 @@ io.on("connection", (socket) => {
   const rooms = io.of("/").adapter.rooms;
   const sids = io.of("/").adapter.sids;
   // console.log("ROOMS", rooms);
-  console.log("SIDS", sids);
+  //console.log("SIDS", sids);
   //reset hash array to avoid duplication
   //hashes are still all available in sids.
   temphashes = [];
@@ -29,7 +29,7 @@ io.on("connection", (socket) => {
   }
   hashes.push(temphashes[temphashes.length - 1]);
   start = 0;
-  console.log("HASHES", hashes);
+  //  console.log("HASHES", hashes);
 
   //find the latest hash
   //assign latest hash to latest user
@@ -109,27 +109,47 @@ io.on("connection", (socket) => {
   //   console.log("ROOMMANAGEMENT", roomManagement);
   // }
 
-  function findUser(hashes, sids) {
-    //filter out sid strings
+  function findUser(hash, sids) {
+    //filter out sid strings from sids object array
     let sidFilter = [];
     for (let sid of sids) {
       sidFilter.push(sid[0]);
     }
 
-    //compare logged hashes, to current sids on the network
-    //find ones that arn't there, and place them in result
-    let result = hashes.filter((e) => !sidFilter.includes(e));
+    //compare logged hashes, to current sids
+    let result = hash.filter((e) => !sidFilter.includes(e));
     start = 0;
-console.log("RESULT", result);
+  //  console.log("DISCONNECTED-HASH", result);
 
-    //map through
-    //find the missing pair
-    //find the user with that hash
-    //return user object
-    //update the hashes to keep the list small
+    //compare logged hashes, and filter out disconnected hash
+    let newHashes = hash.filter((e) => !result.includes(e));
+  //  console.log("NEW-HASHES", newHashes);
 
-    return result;
+    //update hash log
+    hashes = newHashes;
+  //  console.log("UPDATED-HASHES", hashes);
+
+    //finds disconnected user
+    let disconnectedUser = roomManagement.filter((x) =>
+      x["hash"].includes(result[0])
+    );
+  //  console.log("MISSING-USER", disconnectedUser);
+
+    return disconnectedUser;
   }
+
+  /////////////
+  /////////////
+  /////////////
+  //REMOVE USER
+  function removeUser(id) {
+    console.log("ROOM-MANAGEMENT", roomManagement);
+    let result = roomManagement.filter((x) => !x["hash"].includes(id[0]));
+    roomManagement = result;
+    console.log("NEW-ROOM-MANAGEMENT", roomManagement);
+  }
+
+
 
   socket.on("send_message", (src, index, button, user) => {
     let roomNumber = room(user);
@@ -144,15 +164,17 @@ console.log("RESULT", result);
   });
 
   socket.on("disconnect", () => {
-    //    let userDisconnect = findUser(hashes, sids)
-    findUser(hashes, sids);
-    //    console.log("USEROBJECT", userDisconnect);
+    let userDisconnected = findUser(hashes, sids);
+    let buttons = userDisconnected[0].buttons;
+    let roomNumber = userDisconnected[0].room;
+    removeUser(userDisconnected[0].hash);
     //send out button index's to relinquish control
     //send to the right room
     //userDisconnect[0].room for room id??
     //userDisconnect[0].buttons to broadcast??
-    //    socket.broadcast.to(roomNumber).emit("client_disconnected", roomManagement);
-    socket.broadcast.emit("client_disconnected", roomManagement);
+    //socket.broadcast.to(roomNumber).emit("client_disconnected", roomManagement);
+    //EVERYTHING GETS DROPPED BECAUSE OF THE ALERT, if it timesout the connection
+    socket.broadcast.to(roomNumber).emit("client_disconnected", buttons);
   });
 });
 
