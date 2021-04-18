@@ -8,18 +8,16 @@ const io = require("socket.io")(http, {
 let userId = 1;
 let count = 1;
 let newRoom = "room1";
-let userBttns = [];
-let roomManagement = [{ user: userId, buttons: userBttns, room: newRoom }];
+let roomManagement = [{ user: userId, buttons: [], room: newRoom }];
 
 io.on("connection", (socket) => {
   console.log("connected");
 
-// unique user ID's can be refactored with native socketio connection hash id's
-// const rooms = io.of("/").adapter.rooms;
-// const sids = io.of("/").adapter.sids;
-// console.log("ROOMS", rooms);
-// console.log("SIDS", sids);
-
+  // unique user ID's can be refactored with native socketio connection hash id's
+  // const rooms = io.of("/").adapter.rooms;
+  // const sids = io.of("/").adapter.sids;
+  // console.log("ROOMS", rooms);
+  // console.log("SIDS", sids);
 
   //Send User information, to newUser upon connection
   socket.join(newRoom);
@@ -27,7 +25,7 @@ io.on("connection", (socket) => {
 
   //On connect, update userId
   userId++;
-  console.log("ON CONNECTION", roomManagement);
+//  console.log("ON CONNECTION", roomManagement);
 
   //ROOMS
   //if userId > 4, reset to 1, create new room
@@ -38,42 +36,69 @@ io.on("connection", (socket) => {
   }
 
   //update
-  roomManagement.push({ user: userId, buttons: userBttns, room: newRoom });
+  roomManagement.push({ user: userId, buttons: [], room: newRoom });
 
-  
-  //room selector
-function room(user) {
-  console.log("USER OBJECT", user);
-  for (let room of roomManagement) {
-    if (room.room === user[0].newRoom) {
-     console.log("INSIDE", room.room);
-      return room.room;
+  //ROOM SELECTION
+  function room(user) {
+    //console.log("USER OBJECT", user);
+    for (let room of roomManagement) {
+      if (room.room === user[0].newRoom) {
+        // console.log("INSIDE", room.room);
+        return room.room;
+      }
     }
   }
-}
+
+  //USER BUTTONS-IN-USE
+
   
+  function buttonAdd(index, user) {
+    roomManagement.forEach((x) => {
+      if (x.user === user[0].userId && x.room === user[0].newRoom) {
+        x.buttons.push(index);
+      }
+    }) 
+  }
+  
+
+  function buttonRemove(id, user) {
+    roomManagement.forEach((x) => {
+      console.log("X",x);
+      console.log("USER[0]", user[0]);
+      if (x.user === user[0].userId && x.room === user[0].newRoom) {
+        x.buttons.forEach((y, index) => {      
+          if (y === id) {
+            x.buttons.splice(index, 1)
+          }
+        });
+      }
+    }) 
+  console.log("ROOMMANAGEMENT", roomManagement);
+  }
+
+
+
   //BUTTON CONTROL
   //Everytime a button is played, push it to a button
   //Everytime a button is stopped, remove it
   //on disconnect, find user id, and send buttons into client pool
-
-  //io.on(x => {return room(x)}).
+  
   socket.on("send_message", (src, index, button, user) => {
-    console.log("test it");
     let roomNumber = room(user);
-
-    
-
-
-
+    buttonAdd(index, user);        
     socket.broadcast.to(roomNumber).emit("message", src, index, button);
   });
-  socket.on("stop_everyone", (src, index, button) => {
-    socket.broadcast.emit("stop_play", src, index, button);
+
+  socket.on("stop_everyone", (src, index, button, user) => {  
+    let roomNumber = user[0].newRoom
+    buttonRemove(index, user)
+    socket.broadcast.to(roomNumber).emit("stop_play", src, index, button);
   });
+
   socket.on("disconnect", () => {
-  //console.log("CLIENT DISCONNECTED");
-    socket.broadcast.emit("client_disconnected", roomManagement);
+    //this is where we need to disconnect and stop buttons.
+    //console.log("CLIENT DISCONNECTED");
+    socket.broadcast.to().emit("client_disconnected", roomManagement);
   });
 });
 
