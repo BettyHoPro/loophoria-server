@@ -110,20 +110,29 @@ io.on("connection", (socket) => {
 
 
   function findUser(hashes, sids) {
-let result = []
+let result = hashes.filter(h => !sids.some(sid => sid[0] === h));
     start = 0;
     console.log("INSIDE-FIND-USER", sids);
-console.log("HASHES", hashes);  
-  hashes.forEach((h) => {
+    console.log("HASHES", hashes);  
+  // hashes.forEach((h) => {
+   
+  //  for (let sid of sids) {
+
+  //   if (h !== sid[0]) {
+  //     result.push(h);
+  //   }
+
+  //  }
+   
     //map through
-    if (h !== )
+    
     //find the missing pair
     //find the user with that hash
     //return user object
 
-  })  
-
-
+  //})  
+  console.log("FOUND-OUT", result )
+return result;
   }
 
 
