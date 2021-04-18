@@ -19,11 +19,10 @@ io.on("connection", (socket) => {
   // unique user ID's can be refactored with native socketio connection hash id's
   const rooms = io.of("/").adapter.rooms;
   const sids = io.of("/").adapter.sids;
-  // console.log("ROOMS", rooms);
-  //console.log("SIDS", sids);
-  //reset hash array to avoid duplication
-  //hashes are still all available in sids.
+
+  //reset temphash array to avoid duplication
   temphashes = [];
+  //update temphash array
   for (let sid of sids) {
     temphashes.push(sid[start]);
   }
@@ -57,17 +56,14 @@ io.on("connection", (socket) => {
 
   //ROOM SELECTION
   function room(user) {
-    //console.log("USER OBJECT", user);
     for (let room of roomManagement) {
       if (room.room === user[0].newRoom) {
-        // console.log("INSIDE", room.room);
         return room.room;
       }
     }
   }
 
-  //USER BUTTONS-IN-USE
-
+  //ADD BUTTONS-IN-USE to use object
   function buttonAdd(index, user) {
     roomManagement.forEach((x) => {
       if (x.user === user[0].userId && x.room === user[0].newRoom) {
@@ -76,6 +72,7 @@ io.on("connection", (socket) => {
     });
   }
 
+  //REMOVE BUTTONS-NOT-IN-USE from user object
   function buttonRemove(id, user) {
     roomManagement.forEach((x) => {
       console.log("X", x);
@@ -88,27 +85,9 @@ io.on("connection", (socket) => {
         });
       }
     });
-    console.log("ROOMMANAGEMENT", roomManagement);
   }
 
-  //BUTTON CONTROL
-  //on disconnect, find user id, and send buttons into client pool
-
-  // function buttonRemove(id, user) {
-  //   roomManagement.forEach((x) => {
-  //     console.log("X", x);
-  //     console.log("USER[0]", user[0]);
-  //     if (x.user === user[0].userId && x.room === user[0].newRoom) {
-  //       x.buttons.forEach((y, index) => {
-  //         if (y === id) {
-  //           x.buttons.splice(index, 1);
-  //         }
-  //       });
-  //     }
-  //   });
-  //   console.log("ROOMMANAGEMENT", roomManagement);
-  // }
-
+  //STOP ALL BUTTONS-IN-USE
   function findUser(hash, sids) {
     //filter out sid strings from sids object array
     let sidFilter = [];
@@ -119,37 +98,26 @@ io.on("connection", (socket) => {
     //compare logged hashes, to current sids
     let result = hash.filter((e) => !sidFilter.includes(e));
     start = 0;
-  //  console.log("DISCONNECTED-HASH", result);
 
     //compare logged hashes, and filter out disconnected hash
     let newHashes = hash.filter((e) => !result.includes(e));
-  //  console.log("NEW-HASHES", newHashes);
 
     //update hash log
     hashes = newHashes;
-  //  console.log("UPDATED-HASHES", hashes);
 
     //finds disconnected user
     let disconnectedUser = roomManagement.filter((x) =>
       x["hash"].includes(result[0])
     );
-  //  console.log("MISSING-USER", disconnectedUser);
 
     return disconnectedUser;
   }
 
-  /////////////
-  /////////////
-  /////////////
   //REMOVE USER
   function removeUser(id) {
-    console.log("ROOM-MANAGEMENT", roomManagement);
     let result = roomManagement.filter((x) => !x["hash"].includes(id[0]));
     roomManagement = result;
-    console.log("NEW-ROOM-MANAGEMENT", roomManagement);
   }
-
-
 
   socket.on("send_message", (src, index, button, user) => {
     let roomNumber = room(user);
@@ -168,12 +136,7 @@ io.on("connection", (socket) => {
     let buttons = userDisconnected[0].buttons;
     let roomNumber = userDisconnected[0].room;
     removeUser(userDisconnected[0].hash);
-    //send out button index's to relinquish control
     //send to the right room
-    //userDisconnect[0].room for room id??
-    //userDisconnect[0].buttons to broadcast??
-    //socket.broadcast.to(roomNumber).emit("client_disconnected", roomManagement);
-    //EVERYTHING GETS DROPPED BECAUSE OF THE ALERT, if it timesout the connection
     socket.broadcast.to(roomNumber).emit("client_disconnected", buttons);
   });
 });
@@ -181,3 +144,8 @@ io.on("connection", (socket) => {
 http.listen(process.env.PORT || 4000, function () {
   console.log("listening on port 4000");
 });
+
+//if the server disconnects
+//or if your system times out
+//it sometimes doesn't reconnect back to the same group
+//and sometimes might not work in the new group
