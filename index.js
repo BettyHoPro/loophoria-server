@@ -20,20 +20,22 @@ io.on("connection", (socket) => {
   const rooms = io.of("/").adapter.rooms;
   const sids = io.of("/").adapter.sids;
   // console.log("ROOMS", rooms);
-   console.log("SIDS", sids);
-   //reset hash array to avoid duplication
-   //hashes are still all available in sids.
-   temphashes = [];
-   for (let sid of sids) {
-     temphashes.push(sid[start]);
-    }
-    hashes.push(temphashes[temphashes.length - 1])
-    start = 0;
-    console.log("HASHES", hashes);
-  
+  console.log("SIDS", sids);
+  //reset hash array to avoid duplication
+  //hashes are still all available in sids.
+  temphashes = [];
+  for (let sid of sids) {
+    temphashes.push(sid[start]);
+  }
+  hashes.push(temphashes[temphashes.length - 1]);
+  start = 0;
+  console.log("HASHES", hashes);
+
   //find the latest hash
   //assign latest hash to latest user
-  roomManagement[roomManagement.length - 1].hash.push(hashes[hashes.length - 1]);
+  roomManagement[roomManagement.length - 1].hash.push(
+    hashes[hashes.length - 1]
+  );
 
   //Send User information, to newUser upon connection
   socket.join(newRoom);
@@ -92,56 +94,42 @@ io.on("connection", (socket) => {
   //BUTTON CONTROL
   //on disconnect, find user id, and send buttons into client pool
 
-  function buttonRemove(id, user) {
-    roomManagement.forEach((x) => {
-      console.log("X", x);
-      console.log("USER[0]", user[0]);
-      if (x.user === user[0].userId && x.room === user[0].newRoom) {
-        x.buttons.forEach((y, index) => {
-          if (y === id) {
-            x.buttons.splice(index, 1);
-          }
-        });
-      }
-    });
-    console.log("ROOMMANAGEMENT", roomManagement);
-  }
-
-
+  // function buttonRemove(id, user) {
+  //   roomManagement.forEach((x) => {
+  //     console.log("X", x);
+  //     console.log("USER[0]", user[0]);
+  //     if (x.user === user[0].userId && x.room === user[0].newRoom) {
+  //       x.buttons.forEach((y, index) => {
+  //         if (y === id) {
+  //           x.buttons.splice(index, 1);
+  //         }
+  //       });
+  //     }
+  //   });
+  //   console.log("ROOMMANAGEMENT", roomManagement);
+  // }
 
   function findUser(hashes, sids) {
-let result = hashes.filter(h => !sids.some(sid => sid[0] === h));
+    //filter out sid strings
+    let sidFilter = [];
+    for (let sid of sids) {
+      sidFilter.push(sid[0]);
+    }
+
+    //compare logged hashes, to current sids on the network
+    //find ones that arn't there, and place them in result
+    let result = hashes.filter((e) => !sidFilter.includes(e));
     start = 0;
-    console.log("INSIDE-FIND-USER", sids);
-    console.log("HASHES", hashes);  
-  // hashes.forEach((h) => {
-   
-  //  for (let sid of sids) {
+console.log("RESULT", result);
 
-  //   if (h !== sid[0]) {
-  //     result.push(h);
-  //   }
-
-  //  }
-   
     //map through
-    
     //find the missing pair
     //find the user with that hash
     //return user object
+    //update the hashes to keep the list small
 
-  //})  
-  console.log("FOUND-OUT", result )
-return result;
+    return result;
   }
-
-
-
-
-
-
-
-
 
   socket.on("send_message", (src, index, button, user) => {
     let roomNumber = room(user);
@@ -156,14 +144,14 @@ return result;
   });
 
   socket.on("disconnect", () => {
-//    let userDisconnect = findUser(hashes, sids)
-findUser(hashes, sids);
-//    console.log("USEROBJECT", userDisconnect);
+    //    let userDisconnect = findUser(hashes, sids)
+    findUser(hashes, sids);
+    //    console.log("USEROBJECT", userDisconnect);
     //send out button index's to relinquish control
     //send to the right room
     //userDisconnect[0].room for room id??
     //userDisconnect[0].buttons to broadcast??
-//    socket.broadcast.to(roomNumber).emit("client_disconnected", roomManagement);
+    //    socket.broadcast.to(roomNumber).emit("client_disconnected", roomManagement);
     socket.broadcast.emit("client_disconnected", roomManagement);
   });
 });
