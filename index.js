@@ -14,10 +14,10 @@ io.on("connection", (socket) => {
   console.log("connected");
 
   // unique user ID's can be refactored with native socketio connection hash id's
-  // const rooms = io.of("/").adapter.rooms;
-  // const sids = io.of("/").adapter.sids;
-  // console.log("ROOMS", rooms);
-  // console.log("SIDS", sids);
+   const rooms = io.of("/").adapter.rooms;
+   const sids = io.of("/").adapter.sids;
+   console.log("ROOMS", rooms);
+   console.log("SIDS", sids);
 
   //Send User information, to newUser upon connection
   socket.join(newRoom);
@@ -79,8 +79,6 @@ io.on("connection", (socket) => {
 
 
   //BUTTON CONTROL
-  //Everytime a button is played, push it to a button
-  //Everytime a button is stopped, remove it
   //on disconnect, find user id, and send buttons into client pool
   
   socket.on("send_message", (src, index, button, user) => {
@@ -98,6 +96,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     //this is where we need to disconnect and stop buttons.
     //console.log("CLIENT DISCONNECTED");
+
     socket.broadcast.to().emit("client_disconnected", roomManagement);
   });
 });
