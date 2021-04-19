@@ -15,11 +15,10 @@ let roomManagement = [{ user: userId, buttons: [], room: newRoom, hash: [] }];
 
 io.on("connection", (socket) => {
   console.log("connected");
-
   // unique user ID's can be refactored with native socketio connection hash id's
   const rooms = io.of("/").adapter.rooms;
   const sids = io.of("/").adapter.sids;
-
+  
   //reset temphash array to avoid duplication
   temphashes = [];
   //update temphash array
@@ -29,23 +28,24 @@ io.on("connection", (socket) => {
   hashes.push(temphashes[temphashes.length - 1]);
   start = 0;
   //  console.log("HASHES", hashes);
-
+  
   //find the latest hash
   //assign latest hash to latest user
   roomManagement[roomManagement.length - 1].hash.push(
     hashes[hashes.length - 1]
-  );
-
-  //Send User information, to newUser upon connection
-  socket.join(newRoom);
-  io.to(newRoom).emit("userId", { userId, newRoom });
-
-  //On connect, update userId
+    );
+    
+    //Send User information, to newUser upon connection
+    socket.join(newRoom);
+    io.to(newRoom).emit("userId", { userId, newRoom });
+    console.log("INITIAL-ROOMS-USERS", roomManagement);
+    
+    //On connect, update userId
   userId++;
 
-  //ROOMS
-  //if userId > 4, reset to 1, create new room
-  if (userId > 4) {
+  //ROOM CREATOR
+  //--->INCREASE/DECREASE NUMBER INSIDE IF CONDITION, TO INCREASE OR DECREASE ROOM SIZES<---//
+  if (userId > 2) {
     userId = 1;
     count++;
     newRoom = `room${count}`;
@@ -54,7 +54,7 @@ io.on("connection", (socket) => {
   //update
   roomManagement.push({ user: userId, buttons: [], room: newRoom, hash: [] });
 
-  //ROOM SELECTION
+  //ROOM SELECTION FOR SENDING MSGS
   function room(user) {
     for (let room of roomManagement) {
       if (room.room === user[0].newRoom) {
@@ -75,8 +75,6 @@ io.on("connection", (socket) => {
   //REMOVE BUTTONS-NOT-IN-USE from user object
   function buttonRemove(id, user) {
     roomManagement.forEach((x) => {
-      console.log("X", x);
-      console.log("USER[0]", user[0]);
       if (x.user === user[0].userId && x.room === user[0].newRoom) {
         x.buttons.forEach((y, index) => {
           if (y === id) {
@@ -89,6 +87,7 @@ io.on("connection", (socket) => {
 
   //STOP ALL BUTTONS-IN-USE
   function findUser(hash, sids) {
+    //change generic names on refactor
     //filter out sid strings from sids object array
     let sidFilter = [];
     for (let sid of sids) {
@@ -118,34 +117,31 @@ io.on("connection", (socket) => {
     let result = roomManagement.filter((x) => !x["hash"].includes(id[0]));
     roomManagement = result;
   }
-
+  //START MESSAGE
   socket.on("send_message", (src, index, button, user) => {
     let roomNumber = room(user);
     buttonAdd(index, user);
     socket.broadcast.to(roomNumber).emit("message", src, index, button);
   });
-
+  //STOP MESSAGE
   socket.on("stop_everyone", (src, index, button, user) => {
     let roomNumber = user[0].newRoom;
     buttonRemove(index, user);
     socket.broadcast.to(roomNumber).emit("stop_play", src, index, button);
   });
-
+  //DISCONNECT MESSAGE
   socket.on("disconnect", () => {
     let userDisconnected = findUser(hashes, sids);
     let buttons = userDisconnected[0].buttons;
     let roomNumber = userDisconnected[0].room;
     removeUser(userDisconnected[0].hash);
+    console.log("ON-DISCONNECT", roomManagement);
     //send to the right room
     socket.broadcast.to(roomNumber).emit("client_disconnected", buttons);
   });
 });
 
-http.listen(process.env.PORT || 4000, function () {
+//process.env.PORT ||
+http.listen(4000, function () {
   console.log("listening on port 4000");
 });
-
-//if the server disconnects
-//or if your system times out
-//it sometimes doesn't reconnect back to the same group
-//and sometimes might not work in the new group
