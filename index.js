@@ -1,8 +1,8 @@
 const app = require("express")();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http, {
-  //cors: { origin: 'https://loophoria.herokuapp.com'} // heroku-client URL
-  cors: { origin: "http://localhost:3000" }, // local-client URL
+  cors: { origin: 'https://loophoria.herokuapp.com'} // heroku-client URL
+  //cors: { origin: "http://localhost:3000" }, // local-client URL
 });
 
 let userId = 1;
@@ -48,7 +48,7 @@ io.on("connection", (socket) => {
 
   //ROOM CREATOR
   //--->INCREASE/DECREASE NUMBER INSIDE OF THE "IF CONDITION", TO INCREASE OR DECREASE ROOM SIZES<---//
-  if (userId > 2) { //<--change this number to allow more/less users in a room.
+  if (userId > 4) { //<--change this number to allow more/less users in a room.
     userId = 1;
     count++;
     newRoom = `room${count}`; 
@@ -149,7 +149,7 @@ io.on("connection", (socket) => {
   });
 });
 
-//process.env.PORT ||
-http.listen(4000, function () {
+
+http.listen(process.env.PORT || 4000, function () {
   console.log("listening on port 4000");
 });
