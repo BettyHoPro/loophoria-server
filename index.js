@@ -43,6 +43,9 @@ io.on("connection", (socket) => {
     //On connect, update userId
   userId++;
 
+
+
+
   //ROOM CREATOR
   //--->INCREASE/DECREASE NUMBER INSIDE IF CONDITION, TO INCREASE OR DECREASE ROOM SIZES<---//
   if (userId > 2) {
@@ -50,6 +53,11 @@ io.on("connection", (socket) => {
     count++;
     newRoom = `room${count}`;
   }
+  //--->INCREASE/DECREASE NUMBER INSIDE IF CONDITION, TO INCREASE OR DECREASE ROOM SIZES<---//
+  //ROOM CREATOR
+
+
+
 
   //update
   roomManagement.push({ user: userId, buttons: [], room: newRoom, hash: [] });
