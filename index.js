@@ -47,13 +47,13 @@ io.on("connection", (socket) => {
 
 
   //ROOM CREATOR
-  //--->INCREASE/DECREASE NUMBER INSIDE IF CONDITION, TO INCREASE OR DECREASE ROOM SIZES<---//
-  if (userId > 2) {
+  //--->INCREASE/DECREASE NUMBER INSIDE OF THE "IF CONDITION", TO INCREASE OR DECREASE ROOM SIZES<---//
+  if (userId > 2) { //<--change this number to allow more/less users in a room.
     userId = 1;
     count++;
-    newRoom = `room${count}`;
+    newRoom = `room${count}`; 
   }
-  //--->INCREASE/DECREASE NUMBER INSIDE IF CONDITION, TO INCREASE OR DECREASE ROOM SIZES<---//
+  //--->INCREASE/DECREASE NUMBER INSIDE OF THE "IF CONDITION", TO INCREASE OR DECREASE ROOM SIZES<---//
   //ROOM CREATOR
 
 
